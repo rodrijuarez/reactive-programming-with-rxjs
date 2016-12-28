@@ -1,30 +1,30 @@
-import { Observable } from 'rxjs/Observable';
-import 'rxjs/add/operator/map';
-import 'rxjs/add/operator/filter';
+import { Observable } from 'rxjs';
 
-let numbers = [1, 5, 10];
-let source = Observable.create(observer => {
-	let index = 0;
-	let produceValue = () => {
-		observer.next(numbers[index++]);
+let output = document.getElementById("output"),
+	button = document.getElementById("button");
+let click = Observable.fromEvent(button, "click")
 
-		if (index < numbers.length) {
-			setTimeout(produceValue, 250);
-		} else {
-			observer.complete();
-		}
-	}
+function load(url: string) {
+	let xhr = new XMLHttpRequest();
 
-	produceValue();
-})
-.map(n => n * 2)
-.filter(n => n > 5);
+	xhr.addEventListener("load", () => {
+		console.log('xhr.responseText', xhr.responseText)
+		let movies = JSON.parse(xhr.responseText);
+
+		movies.forEach((movie) => {
+			let div = document.createElement("div");
+			div.innerText = movie.title;
+			output.appendChild(div);
+		})
+	})
+
+	xhr.open("GET", url);
+	xhr.send();
+}
 
 
-source.subscribe(
-	(value) => {
-		console.log(`value: ${value}`);
-	},
+click.subscribe(
+	e => load("movies.json"),
 	(e) => {
 		console.log(`error: ${e}`);
 	},
