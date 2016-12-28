@@ -6,23 +6,11 @@ let click = Observable.fromEvent(button, "click")
 
 function load(url: string) {
 	return Observable
-		.create(observer => {
-			let xhr = new XMLHttpRequest();
-
-			xhr.addEventListener("load", () => {
-				if (xhr.status === 200) {
-					let data = JSON.parse(xhr.responseText);
-					observer.next(data);
-					observer.complete();
-				} else {
-					observer.error(xhr.statusText);
-				}
-			})
-
-			xhr.open("GET", url);
-			xhr.send();
-		})
-		.retryWhen(retryStrategy({ attempts: 3, delay: 1500 }));
+		.defer(() => {
+			return Observable
+				.fromPromise(fetch(url).then(r => r.json()))
+				.retryWhen(retryStrategy({ attempts: 3, delay: 1500 }));
+		});
 }
 
 function renderMovies(movies) {
@@ -45,7 +33,7 @@ function retryStrategy({attempts = 4, delay = 1000}) {
 }
 
 
-click.flatMap(e => load("unexistent.json"))
+click.flatMap(e => load("movies.json"))
 	.subscribe(renderMovies,
 	(e) => {
 		console.log(`error: ${e}`);
